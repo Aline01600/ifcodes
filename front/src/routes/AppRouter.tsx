@@ -51,24 +51,30 @@ export default function AppRouter() {
               <Route path="students" element={<Students />} />
               <Route path="teachers" element={<Teachers />} />
             </Route>
-<<<<<<< HEAD
             <Route
               element={
                 <RequireRole allowedRoles={["student", "professor", "admin"]} />
               }
             >
-=======
-            <Route element={<RequireRole allowedRoles={["admin", "professor"]} />}>
-              <Route path="problems" element={<Problems />} />
-            <Route element={<RequireRole allowedRoles={["student", "professor", "admin"]} />}>
->>>>>>> upstream/visualizacao-perfil
-              <Route path="classes">
-                <Route index element={<Classes />} />
-                <Route path=":id" element={<ClassDetails />} />
+              <Route
+                element={<RequireRole allowedRoles={["admin", "professor"]} />}
+              >
+                <Route path="problems" element={<Problems />} />
+                <Route
+                  element={
+                    <RequireRole
+                      allowedRoles={["student", "professor", "admin"]}
+                    />
+                  }
+                >
+                  <Route path="classes">
+                    <Route index element={<Classes />} />
+                    <Route path=":id" element={<ClassDetails />} />
+                  </Route>
+                </Route>
               </Route>
             </Route>
           </Route>
-         </Route>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@types/draft-js": "^0.11.18",
+    "draft-js": "^0.11.7"
+  }
+}

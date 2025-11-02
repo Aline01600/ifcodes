@@ -51,7 +51,6 @@ export default function Header() {
     { to: "/submissions", label: "Submissões" },
     { to: "/classes", label: "Turmas" },
     // Só mostra o item "Gerenciar" se o usuário for admin
-<<<<<<< HEAD
     ...(isAdmin
       ? [
           {
@@ -63,22 +62,15 @@ export default function Header() {
           },
         ]
       : []),
-=======
-    ...(isAdmin ? [{
-      label: "Gerenciar",
-      submenu: [
-        { to: "/students", label: "Gerenciar Alunos" },
-        { to: "/teachers", label: "Gerenciar Professores" }
-      ]
-    }] : []),
     // Mostra o item "Problemas" se o usuário for admin ou professor
-    ...(isAdmin || isProfessor ? [{
-      label: "Problemas",
-      submenu: [
-        { to: "/problems", label: "Gerenciar Problemas" }
-      ]
-    }] : []),
->>>>>>> upstream/visualizacao-perfil
+    ...(isAdmin || isProfessor
+      ? [
+          {
+            label: "Problemas",
+            submenu: [{ to: "/problems", label: "Gerenciar Problemas" }],
+          },
+        ]
+      : []),
   ];
 
   // Alterna o menu mobile
@@ -422,7 +414,9 @@ export default function Header() {
                         <p className="text-sm font-medium text-gray-900">
                           Meu Perfil
                         </p>
-                        <p className="text-xs text-gray-500">Gerencie sua conta</p>
+                        <p className="text-xs text-gray-500">
+                          Gerencie sua conta
+                        </p>
                       </div>
                     </div>
                   </div>
