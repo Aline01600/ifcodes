@@ -426,22 +426,24 @@ export default function ClassDetails() {
                         >
                           Ver Problema
                         </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setViewSubmissionsActivity(activity);
-                          }}
-                          className={`px-3 py-1.5 text-xs font-medium text-gray-700 rounded-full transition-colors ${
-                            isOverdue
-                              ? "hover:bg-red-100"
-                              : isPending
-                              ? "hover:bg-yellow-100"
-                              : "hover:bg-green-100"
-                          }`}
-                        >
-                          Ver Submissões
-                        </button>
+                        {hasAnyRole(["professor", "admin"]) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewSubmissionsActivity(activity);
+                            }}
+                            className={`px-3 py-1.5 text-xs font-medium text-gray-700 rounded-full transition-colors ${
+                              isOverdue
+                                ? "hover:bg-red-100"
+                                : isPending
+                                ? "hover:bg-yellow-100"
+                                : "hover:bg-green-100"
+                            }`}
+                          >
+                            Ver Submissões
+                          </button>
+                        )}
                       </div>
 
                       <span
