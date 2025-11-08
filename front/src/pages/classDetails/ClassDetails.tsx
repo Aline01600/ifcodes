@@ -4,7 +4,7 @@ import type { Class, ClassStudent } from "@/types/classes";
 import type { Student, Activity, Problem, Submission, SubmissionStatus } from "@/types";
 import ClassesService from "@/services/ClassesService";
 import { getAllStudents } from "@/services/StudentsService";
-import { getActivitiesByClass, createActivity, updateActivity, deleteActivity } from "@/services/ActivitiesService";
+import { getActivitiesByClass, createActivity, updateActivity, deleteActivity, getActivitySubmissions } from "@/services/ActivitiesService";
 import { getAllProblems } from "@/services/ProblemsServices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1208,51 +1208,76 @@ function SubmissionsModal({ isOpen, onClose, activity, classId }: SubmissionsMod
   }, [isOpen, activity]);
 
   const loadSubmissions = async () => {
+    if (!activity) return;
+    
     setLoading(true);
     try {
-      // TODO: Chamar serviço real quando estiver disponível
-      // const data = await getActivitySubmissions(activity.id, classId);
-      // setSubmissions(data);
+      const data = await getActivitySubmissions(classId, activity.id);
       
-      // Mock de dados temporário
-      const mockSubmissions: StudentSubmission[] = [
-        {
-          studentId: 1,
-          studentName: "João Silva Santos",
-          submissionDate: "2024-11-07 14:30:00",
-          status: "passed",
-        },
-        {
-          studentId: 2,
-          studentName: "Maria Oliveira Costa",
-          submissionDate: "2024-11-07 15:45:00",
-          status: "failed",
-        },
-        {
-          studentId: 3,
-          studentName: "Pedro Souza Almeida",
-          submissionDate: null,
-          status: "pending",
-        },
-        {
-          studentId: 4,
-          studentName: "Ana Paula Ferreira",
-          submissionDate: "2024-11-07 16:20:00",
-          status: "compile-error",
-        },
-        {
-          studentId: 5,
-          studentName: "Carlos Eduardo Lima",
-          submissionDate: "2024-11-07 17:10:00",
-          status: "timeout",
-        },
-      ];
-      setSubmissions(mockSubmissions);
+      // Agrupar submissões por usuário e aplicar lógica de priorização
+      const submissionsByUser = new Map<number, any>();
+      
+      data.forEach((item: any) => {
+        const userId = item.user_id;
+        const existing = submissionsByUser.get(userId);
+        
+        if (!existing) {
+          // Se não existe submissão deste usuário, adiciona
+          submissionsByUser.set(userId, item);
+        } else {
+          const isCurrentAccepted = item.status === "Aceita";
+          const isExistingAccepted = existing.status === "Aceita";
+          const currentDate = new Date(item.created_at);
+          const existingDate = new Date(existing.created_at);
+          
+          // Lógica de priorização:
+          // 1. Se a atual é Aceita e a existente não é → substitui
+          // 2. Se ambas são Aceita → pega a mais recente
+          // 3. Se nenhuma é Aceita → pega a mais recente
+          // 4. Se a existente é Aceita e a atual não é → mantém a existente
+          
+          if (isCurrentAccepted && !isExistingAccepted) {
+            submissionsByUser.set(userId, item);
+          } else if (isCurrentAccepted && isExistingAccepted && currentDate > existingDate) {
+            submissionsByUser.set(userId, item);
+          } else if (!isCurrentAccepted && !isExistingAccepted && currentDate > existingDate) {
+            submissionsByUser.set(userId, item);
+          }
+          // Caso contrário, mantém a existente (não faz nada)
+        }
+      });
+      
+      // Mapear os dados da API para o formato esperado pelo componente
+      const mappedSubmissions: StudentSubmission[] = Array.from(submissionsByUser.values()).map((item: any) => ({
+        studentId: item.user_id,
+        studentName: item.user_name,
+        submissionDate: item.created_at, // Usa created_at que tem data e hora completas
+        status: mapStatusToSubmissionStatus(item.status),
+      }));
+      
+      setSubmissions(mappedSubmissions);
     } catch (error) {
       console.error("Erro ao carregar submissões:", error);
+      setSubmissions([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função auxiliar para mapear status da API para SubmissionStatus
+  const mapStatusToSubmissionStatus = (status: string): SubmissionStatus => {
+    const statusMap: Record<string, SubmissionStatus> = {
+      "Aceita": "passed",
+      "Resposta Errada": "failed",
+      "Erro de Compilação": "compile-error",
+      "Erro de Execução (NZEC)": "runtime-error",
+      "Tempo Limite Excedido": "timeout",
+      "Erro Interno": "internal-error",
+      "Processando": "processing",
+      "Pendente": "pending",
+    };
+    
+    return statusMap[status] || "unknown";
   };
 
   const handleRowClick = (submission: StudentSubmission) => {
@@ -1338,6 +1363,7 @@ function SubmissionsModal({ isOpen, onClose, activity, classId }: SubmissionsMod
                               {new Date(submission.submissionDate).toLocaleTimeString("pt-BR", {
                                 hour: "2-digit",
                                 minute: "2-digit",
+                                second: "2-digit",
                               })}
                             </span>
                           </div>
