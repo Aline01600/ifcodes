@@ -13,7 +13,6 @@ export async function getActivityById(
 ): Promise<Activity | undefined> {
   await new Promise((resolve) => setTimeout(resolve, 200));
   return fakePageActivities.items.find((a) => a.id === Number(activityId));
-  return fakePageActivities.items.find((a) => a.id === Number(activityId));
 }
 
 /**
